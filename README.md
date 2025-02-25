@@ -11,7 +11,7 @@
 curl --location --request GET 'https://viu1.coppul.archivematica.org:8000/api/v2/file/?package_type=AIP&status=UPLOADED&limit=2000&offset=0'' --header 'Authorization: ApiKey USERNAME:APIKEY' | jq . > uploaded.json
 
 ```
-- it should look like: `uploaded.json.sample`
+ . . . it should look like the file: `uploaded.json.sample`
 
 2.  Add your credentials to `api_creds.json.sample` and rename as `api_creds.json`
 
