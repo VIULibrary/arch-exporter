@@ -1,0 +1,6 @@
+.DS_Store
+__pycache__
+*.csv
+.vscode/
+download_log.txt
+*.json
