@@ -9,7 +9,7 @@ from tqdm import tqdm
 API_CREDENTIALS_FILE = "api_creds.json"  
 AIPS_JSON_FILE = "uploaded.json" 
 LOG_FILE = "download_log.txt" 
-DOWNLOAD_DIR = "/Users/Daniel/Desktop" 
+DOWNLOAD_DIR = "YOUR DOWNLOAD FOLDER" 
 
 #log stuff
 logging.basicConfig(
