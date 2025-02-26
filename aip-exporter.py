@@ -69,14 +69,14 @@ def download_aip(uuid, current_path, username, api_key):
     if os.path.exists(file_path):
         # Get the current size of the file
         current_size = os.path.getsize(file_path)
-        headers["Range"] = f"bytes={current_size}-"  # Request remaining bytes
+        headers["Range"] = f"bytes={current_size}-" 
     else:
         current_size = 0
 
     # Download AIP (with a progres bar!)
     try:
-        response = requests.get(download_url, headers=headers, stream=True, verify=True)  # Enable SSL verification
-        response.raise_for_status()  # Raise an error for bad status codes
+        response = requests.get(download_url, headers=headers, stream=True, verify=True)  # Enable SSL
+        response.raise_for_status() 
 
         # file size
         total_size = int(response.headers.get("content-length", 0)) + current_size
@@ -87,12 +87,12 @@ def download_aip(uuid, current_path, username, api_key):
             unit="B",
             unit_scale=True,
             desc=f"Downloading {filename}",
-            ncols=100,  # Adjust the width of the progress bar
+            ncols=100,  # progress bar width
             initial=current_size  # Start from the current size
         )
 
         # Download the file in parts
-        with open(file_path, "ab") as f:  # Open in append mode
+        with open(file_path, "ab") as f: 
             for chunk in response.iter_content(chunk_size=8192):
                 if chunk:  # Filter out keep-alive chunks
                     f.write(chunk)
@@ -127,7 +127,7 @@ def main():
         # Download the AIP
         success = download_aip(uuid, current_path, username, api_key)
 
-        # Log success or failure
+        # Log success
         if success:
             logging.info(f"Successfully processed AIP {uuid}")
         else:
