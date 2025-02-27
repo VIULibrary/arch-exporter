@@ -9,15 +9,15 @@ from tqdm import tqdm
 API_CREDENTIALS_FILE = "api_creds.json"  
 AIPS_JSON_FILE = "uploaded.json" 
 LOG_FILE = "download_log.txt" 
-DOWNLOAD_DIR = "YOUR DOWNLOAD FOLDER" 
+DOWNLOAD_DIR = "DOWNLOAD_DIR" 
 
 #log stuff
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[
-        logging.FileHandler(LOG_FILE),  # for the log file
-        logging.StreamHandler()  # for the console
+        logging.FileHandler(LOG_FILE), 
+        logging.StreamHandler()  
     ]
 )
 #load the creds
@@ -54,51 +54,69 @@ def load_aips():
 
 
 #Download an AIP using its UUID and save it with the name from current_path
+def get_file_size(uuid, username, api_key):
+    #Get the expected file size from the server without downloading.
+
+    size_url = f"https://viu1.coppul.archivematica.org:8000/api/v2/file/{uuid}/download/"
+    headers = {"Authorization": f"ApiKey {username}:{api_key}"}
+    
+    try:
+        # Get size
+        response = requests.head(size_url, headers=headers, verify=True)
+        response.raise_for_status()
+        return int(response.headers.get("content-length", 0))
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Failed to get file size for AIP {uuid}: {e}")
+        return None
+
 def download_aip(uuid, current_path, username, api_key):
-   
-    # Get filename from the current_path
+    # Get filename
     filename = current_path.split("/")[-1]
     download_url = f"https://viu1.coppul.archivematica.org:8000/api/v2/file/{uuid}/download/"
     headers = {"Authorization": f"ApiKey {username}:{api_key}"}
 
-    # check the dir
+    # Check the dir . . .
     os.makedirs(DOWNLOAD_DIR, exist_ok=True)
     file_path = os.path.join(DOWNLOAD_DIR, filename)
 
-    # Check if the file already exists
+    #  if the file already exists
     if os.path.exists(file_path):
-        # Get the current size of the file
-        current_size = os.path.getsize(file_path)
-        headers["Range"] = f"bytes={current_size}-" 
-    else:
-        current_size = 0
-
-    # Download AIP (with a progres bar!)
-    try:
-        response = requests.get(download_url, headers=headers, stream=True, verify=True)  # Enable SSL
-        response.raise_for_status() 
-
-        # file size
-        total_size = int(response.headers.get("content-length", 0)) + current_size
-
+        # Get the current size of file
+        local_size = os.path.getsize(file_path)
+        
+        # Get expected size from server
+        expected_size = get_file_size(uuid, username, api_key)
+        
+        if expected_size is not None and local_size == expected_size:
+            logging.info(f"File {filename} already exists with correct size ({local_size} bytes). Skipping download.")
+            return True
+        else:
+            logging.info(f"File {filename} exists but size may be incorrect (local: {local_size}, expected: {expected_size or 'unknown'}). Re-downloading.")
     
+    # Download AIP (with a progress bar!)
+    try:
+        response = requests.get(download_url, headers=headers, stream=True, verify=True)
+        response.raise_for_status()
+
+        # File size
+        total_size = int(response.headers.get("content-length", 0))
+
         progress_bar = tqdm(
             total=total_size,
             unit="B",
             unit_scale=True,
             desc=f"Downloading {filename}",
-            ncols=100,  # progress bar width
-            initial=current_size  # Start from the current size
+            ncols=100  # Progress bar width
         )
 
         # Download the file in parts
-        with open(file_path, "ab") as f: 
+        with open(file_path, "wb") as f:
             for chunk in response.iter_content(chunk_size=8192):
                 if chunk:  # Filter out keep-alive chunks
                     f.write(chunk)
                     progress_bar.update(len(chunk))
 
-        progress_bar.close() 
+        progress_bar.close()
         logging.info(f"Downloaded AIP {uuid} to {file_path}")
         return True
     except requests.exceptions.RequestException as e:
@@ -130,7 +148,7 @@ def main():
         # Log success
         if success:
             logging.info(f"Successfully processed AIP {uuid}")
-        else:
+        else:#l
             logging.error(f"Failed to process AIP {uuid}")
 
     logging.info("All AIPs processed.")
