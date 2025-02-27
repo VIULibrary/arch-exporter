@@ -24,3 +24,6 @@ curl --location --request GET 'https://viu1.coppul.archivematica.org:8000/api/v2
 -   progress log stored at `download_log.txt`
 -   script can be paused or stopped, download will resume on restart
 -   clear the downloads folder and the `download_log.txt` to reset
+
+## TODO ##
+- filter out failed ingests
